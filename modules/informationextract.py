@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from modloader.modast import find_label, ASTHook
+import renpy
 from renpy import ast
 
 def name_node(node):
@@ -7,8 +8,8 @@ def name_node(node):
         return ''
     elif isinstance(node, ASTHook):
         return (node.filename, node.linenumber, 'ASTHook', node.name)
-    elif isinstance(node.name, (str, unicode)):
-        return node.name
+    elif isinstance(node, ast.Label):
+        return (node.filename, node.linenumber, 'label', node.name)
     elif isinstance(node, (ast.Scene,ast.Show,ast.Hide)):
         typename = {ast.Scene: 'scene', ast.Show: 'show', ast.Hide: 'hide'}[type(node)]
         return (node.filename, node.linenumber, typename, ' '.join(node.imspec[0]))
@@ -82,16 +83,30 @@ def read_game_tree():
     return game_tree
 
 
-def save_game_tree_to_file(filename):
+def save_game_tree_to_file(f):
     game_tree = read_game_tree()
-    with open(filename, 'w') as f:
-        f.write('tree={\n')
-        for node, children in game_tree.items():
-            # if isinstance(node, (str, unicode)):
-            #     f.write('"%s":[\n'%(node,))
-            # else:
-            f.write('%r:[\n'%(node,))
-            for child in children:
-                f.write('\t%r,\n'%(child,))
-            f.write('],\n')
-        f.write('}\n')
+    f.write('\ntree={\n')
+    for node, children in game_tree.items():
+        f.write('%r:[\n'%(node,))
+        for child in children:
+            f.write('\t%r,\n'%(child,))
+        f.write('],\n')
+    f.write('}\n')
+
+
+def save_file_list_to_file(f):
+    # Index the archives, if we haven't already.
+    renpy.loader.index_archives()
+
+    files = list(filename for _,filename in renpy.loader.game_files if not filename.startswith('mods/'))
+
+    f.write('\ngame_files=[\n')
+    for filename in files:
+        f.write('\t%r,\n'%(filename,))
+    f.write(']\n')
+
+
+def run():
+    with open('game/mods/infoextract/game_tree.py','w') as f:
+        save_file_list_to_file(f)
+        save_game_tree_to_file(f)
