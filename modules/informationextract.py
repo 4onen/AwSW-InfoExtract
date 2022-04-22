@@ -106,7 +106,16 @@ def save_file_list_to_file(f):
     f.write(']\n')
 
 
+def save_imagespec_list_to_file(f):
+    f.write('\nimages=[\n')
+    for name in renpy.display.image.images.keys():
+        f.write('\t%r,\n'%(name,))
+    f.write(']\n')
+
+
+
 def run():
     with open('game/mods/infoextract/game_tree.py','w') as f:
         save_file_list_to_file(f)
+        save_imagespec_list_to_file(f)
         save_game_tree_to_file(f)
