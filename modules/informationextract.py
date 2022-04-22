@@ -113,9 +113,19 @@ def save_imagespec_list_to_file(f):
     f.write(']\n')
 
 
+def save_character_list_to_file(f):
+    from renpy.python import store_dicts
+    f.write('\ncharacters={\n')
+    for name in store_dicts['store']:
+        inst = store_dicts['store'][name]
+        if isinstance(inst, renpy.character.ADVCharacter):
+            f.write('\t%r: %r,\n'%(name, (inst.name, inst.__dict__['who_args'].get('color',None), getattr(inst,'image_tag',None))))
+    f.write('}\n')
+
 
 def run():
     with open('game/mods/infoextract/game_tree.py','w') as f:
         save_file_list_to_file(f)
         save_imagespec_list_to_file(f)
+        save_character_list_to_file(f)
         save_game_tree_to_file(f)
